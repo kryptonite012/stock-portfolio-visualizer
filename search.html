@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Stocks — StockVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--surface:#1e1e28;--border:rgba(255,255,255,0.08);--accent:#00e5a0;--accent2:#7c6aff;--red:#ff5470;--amber:#ffb547;--text:#f0f0f5;--muted:#8888aa;--font-serif:'DM Serif Display',serif;--font-sans:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;display:flex;}
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:fixed;left:0;top:0;bottom:0;z-index:100;}
+  .sidebar-logo{display:flex;align-items:center;gap:8px;padding:0 24px 28px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .sidebar-logo-icon{width:32px;height:32px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .sidebar-logo-icon svg{width:18px;height:18px;}
+  .sidebar-logo-name{font-family:var(--font-serif);font-size:18px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 24px;cursor:pointer;color:var(--muted);font-size:14px;border-left:3px solid transparent;transition:all .15s;text-decoration:none;}
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,0.03);}
+  .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,229,160,0.05);}
+  .nav-item svg{width:17px;height:17px;flex-shrink:0;}
+  .nav-section{padding:16px 24px 6px;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+  .sidebar-user{margin-top:auto;padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .avatar{width:34px;height:34px;background:var(--accent2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#fff;flex-shrink:0;}
+  .sidebar-user-name{font-size:13px;color:var(--text);}
+  .sidebar-user-email{font-size:11px;color:var(--muted);}
+  .logout-btn{margin-left:auto;cursor:pointer;color:var(--muted);font-size:13px;background:none;border:none;}
+  .logout-btn:hover{color:var(--red);}
+  .main{margin-left:220px;flex:1;padding:32px 36px;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .main{animation:fadeIn .3s ease;}
+  .page-header{margin-bottom:28px;}
+  .page-title{font-family:var(--font-serif);font-size:28px;}
+  .page-subtitle{font-size:13px;color:var(--muted);margin-top:3px;}
+
+  .search-bar{position:relative;margin-bottom:24px;}
+  .search-bar input{
+    width:100%;padding:14px 18px 14px 48px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;color:var(--text);
+    font-family:var(--font-sans);font-size:15px;outline:none;
+    transition:border .2s;
+  }
+  .search-bar input:focus{border-color:var(--accent);}
+  .search-bar input::placeholder{color:var(--muted);}
+  .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);}
+  
+  .filter-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-family:var(--font-sans);cursor:pointer;transition:all .15s;}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+
+  .stocks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+  .stock-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:20px;cursor:pointer;
+    transition:border .2s,transform .15s;
+  }
+  .stock-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-2px);}
+  .stock-card.in-portfolio{border-color:rgba(0,229,160,0.2);}
+  .sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .sc-sym{font-family:var(--font-mono);font-size:16px;font-weight:500;}
+  .sc-name{font-size:12px;color:var(--muted);margin-top:2px;}
+  .sc-badge{padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(124,106,255,0.12);color:var(--accent2);}
+  .sc-price{font-family:var(--font-mono);font-size:22px;margin-bottom:4px;}
+  .sc-change{font-size:12px;font-family:var(--font-mono);}
+  .sc-sparkline{width:100%;height:48px;margin:12px 0;}
+  .sc-actions{display:flex;gap:8px;margin-top:12px;}
+  .sc-btn-buy{flex:1;padding:8px;border-radius:8px;border:none;background:var(--accent);color:#0a0a0f;font-size:13px;font-family:var(--font-sans);font-weight:500;cursor:pointer;transition:opacity .15s;}
+  .sc-btn-buy:hover{opacity:0.85;}
+  .sc-btn-detail{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-family:var(--font-sans);cursor:pointer;transition:all .15s;}
+  .sc-btn-detail:hover{border-color:var(--accent2);color:var(--accent2);}
+  .owned-tag{font-size:10px;background:rgba(0,229,160,0.1);color:var(--accent);padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block;}
+  .up{color:var(--accent);}
+  .dn{color:var(--red);}
+
+  /* Quick buy modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:400px;transform:translateY(20px);transition:transform .2s;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal h3{font-family:var(--font-serif);font-size:22px;margin-bottom:4px;}
+  .modal-sym{font-family:var(--font-mono);font-size:13px;color:var(--muted);margin-bottom:20px;}
+  .form-group{margin-bottom:16px;}
+  .form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .form-group input{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-sans);font-size:14px;outline:none;}
+  .form-group input:focus{border-color:var(--accent);}
+  .modal-btns{display:flex;gap:10px;margin-top:4px;}
+  .modal-btns button{flex:1;padding:10px;border-radius:8px;font-size:14px;font-family:var(--font-sans);cursor:pointer;}
+  .btn-cancel{border:1px solid var(--border);background:transparent;color:var(--text);}
+  .btn-buy{border:none;background:var(--accent);color:#0a0a0f;font-weight:500;}
+  .btn-buy:hover{opacity:0.85;}
+  .cost-preview{font-size:12px;color:var(--muted);margin-top:8px;font-family:var(--font-mono);}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);color:var(--accent);padding:12px 18px;border-radius:10px;font-size:13px;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(10px);}
+  .toast.show{opacity:1;pointer-events:auto;transform:translateY(0);}
+
+  @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="buy-modal">
+  <div class="modal">
+    <h3 id="modal-title">Buy Stock</h3>
+    <div class="modal-sym" id="modal-sym"></div>
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" id="modal-qty" placeholder="Number of shares" min="1" oninput="updateCost()">
+    </div>
+    <div class="form-group">
+      <label>Price per share (₹) — pre-filled with current price</label>
+      <input type="number" id="modal-price" placeholder="Price" oninput="updateCost()">
+    </div>
+    <div class="cost-preview" id="cost-preview">Total cost: ₹0 | Balance: —</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-buy" onclick="confirmBuy()">Confirm Buy</button>
+    </div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon"><svg viewBox="0 0 20 20" fill="none"><polyline points="2,14 7,8 11,11 18,4" stroke="#0a0a0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14,4 18,4 18,8" stroke="#0a0a0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span class="sidebar-logo-name">StockVault</span>
+  </div>
+  <span class="nav-section">Main</span>
+  <a class="nav-item" href="dashboard.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+    Dashboard
+  </a>
+  <a class="nav-item active" href="search.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg>
+    Search Stocks
+  </a>
+  <a class="nav-item" href="analytics.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,16 7,10 11,13 18,5"/><line x1="2" y1="16" x2="18" y2="16"/></svg>
+    Analytics
+  </a>
+  <span class="nav-section">Account</span>
+  <a class="nav-item" href="#">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="3"/><path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18"/></svg>
+    Settings
+  </a>
+  <div class="sidebar-user">
+    <div class="avatar" id="user-avatar">D</div>
+    <div><div class="sidebar-user-name" id="user-name">User</div><div class="sidebar-user-email" id="user-email"></div></div>
+    <button class="logout-btn" onclick="localStorage.removeItem('sv_current_user');window.location.href='index.html'">⇤</button>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Search Stocks</div>
+    <div class="page-subtitle">Browse and add stocks to your portfolio — ₹<span id="balance-display">0</span> available</div>
+  </div>
+
+  <div class="search-bar">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg>
+    <input type="text" id="search-input" placeholder="Search by name or symbol…" oninput="filterStocks()">
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterBySector('All',this)">All</button>
+    <button class="filter-btn" onclick="filterBySector('IT',this)">IT</button>
+    <button class="filter-btn" onclick="filterBySector('Finance',this)">Finance</button>
+    <button class="filter-btn" onclick="filterBySector('Energy',this)">Energy</button>
+    <button class="filter-btn" onclick="filterBySector('Auto',this)">Auto</button>
+    <button class="filter-btn" onclick="filterBySector('FMCG',this)">FMCG</button>
+    <button class="filter-btn" onclick="filterBySector('Pharma',this)">Pharma</button>
+  </div>
+
+  <div class="stocks-grid" id="stocks-grid"></div>
+</main>
+
+<script>
+const STOCKS=[
+  {symbol:'RELIANCE',name:'Reliance Industries',sector:'Energy',base:2800},
+  {symbol:'TCS',name:'Tata Consultancy Services',sector:'IT',base:3900},
+  {symbol:'INFY',name:'Infosys Ltd',sector:'IT',base:1430},
+  {symbol:'HDFC',name:'HDFC Bank',sector:'Finance',base:1700},
+  {symbol:'WIPRO',name:'Wipro Ltd',sector:'IT',base:440},
+  {symbol:'TATAMOTORS',name:'Tata Motors',sector:'Auto',base:780},
+  {symbol:'SBIN',name:'State Bank of India',sector:'Finance',base:620},
+  {symbol:'BAJFINANCE',name:'Bajaj Finance',sector:'Finance',base:6800},
+  {symbol:'ITC',name:'ITC Ltd',sector:'FMCG',base:460},
+  {symbol:'SUNPHARMA',name:'Sun Pharmaceutical',sector:'Pharma',base:1200},
+  {symbol:'ONGC',name:'ONGC',sector:'Energy',base:270},
+  {symbol:'HCLTECH',name:'HCL Technologies',sector:'IT',base:1380},
+  {symbol:'MARUTI',name:'Maruti Suzuki',sector:'Auto',base:10500},
+  {symbol:'ADANIENT',name:'Adani Enterprises',sector:'Conglomerate',base:2400},
+  {symbol:'ULTRACEMCO',name:'UltraTech Cement',sector:'Materials',base:9800},
+];
+
+let prices={},currentSector='All',currentSearch='';
+let currentUser=JSON.parse(localStorage.getItem('sv_current_user'));
+if(!currentUser) window.location.href='index.html';
+
+document.getElementById('user-avatar').textContent=currentUser.name[0].toUpperCase();
+document.getElementById('user-name').textContent=currentUser.name;
+document.getElementById('user-email').textContent=currentUser.email;
+
+function genPrices(){STOCKS.forEach(s=>{prices[s.symbol]=+(s.base*(0.92+Math.random()*0.16)).toFixed(2);});}
+genPrices();
+document.getElementById('balance-display').textContent=(currentUser.balance||0).toLocaleString('en-IN');
+
+function genSparkData(base){const d=[];let v=base;for(let i=0;i<12;i++){v*=(0.97+Math.random()*0.06);d.push(+v.toFixed(2));}return d;}
+
+let sparkCharts={};
+function renderCards(list){
+  const grid=document.getElementById('stocks-grid');
+  // Destroy old charts
+  Object.values(sparkCharts).forEach(c=>c.destroy());
+  sparkCharts={};
+  if(list.length===0){grid.innerHTML='<div style="color:var(--muted);padding:40px;grid-column:1/-1">No stocks found.</div>';return;}
+  grid.innerHTML=list.map(s=>{
+    const cur=prices[s.symbol]||s.base;
+    const chg=(((cur-s.base)/s.base)*100).toFixed(2);
+    const owned=(currentUser.portfolio||[]).find(h=>h.symbol===s.symbol);
+    return `<div class="stock-card${owned?' in-portfolio':''}" id="card-${s.symbol}">
+      <div class="sc-top">
+        <div><div class="sc-sym">${s.symbol}</div><div class="sc-name">${s.name}</div>${owned?'<span class="owned-tag">✓ In portfolio</span>':''}</div>
+        <span class="sc-badge">${s.sector}</span>
+      </div>
+      <div class="sc-price">₹${cur.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+      <div class="sc-change ${chg>=0?'up':'dn'}">${chg>=0?'▲ +':'▼ '}${Math.abs(chg)}% today</div>
+      <canvas class="sc-sparkline" id="spark-${s.symbol}" height="48"></canvas>
+      <div class="sc-actions">
+        <button class="sc-btn-buy" onclick="openBuy('${s.symbol}')">Buy</button>
+      </div>
+    </div>`;
+  }).join('');
+  // Draw sparklines after DOM is ready
+  setTimeout(()=>{
+    list.forEach(s=>{
+      const ctx=document.getElementById('spark-'+s.symbol);
+      if(!ctx) return;
+      const cur=prices[s.symbol]||s.base;
+      const chg=cur>=s.base;
+      const data=genSparkData(s.base*0.9);
+      data.push(cur);
+      sparkCharts[s.symbol]=new Chart(ctx,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,fill:true,backgroundColor:chg?'rgba(0,229,160,0.1)':'rgba(255,84,112,0.1)',borderColor:chg?'#00e5a0':'#ff5470',borderWidth:1.5,pointRadius:0,tension:0.4}]},options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:0}}});
+    });
+  },50);
+}
+
+function getFiltered(){
+  return STOCKS.filter(s=>{
+    const matchSec=currentSector==='All'||s.sector===currentSector;
+    const matchSearch=!currentSearch||s.symbol.toLowerCase().includes(currentSearch)||s.name.toLowerCase().includes(currentSearch);
+    return matchSec&&matchSearch;
+  });
+}
+
+function filterStocks(){currentSearch=document.getElementById('search-input').value.toLowerCase();renderCards(getFiltered());}
+function filterBySector(sec,btn){currentSector=sec;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCards(getFiltered());}
+
+// Buy modal
+let buyingSymbol=null;
+function openBuy(sym){
+  buyingSymbol=sym;
+  const s=STOCKS.find(x=>x.symbol===sym);
+  const cur=prices[sym]||s.base;
+  document.getElementById('modal-title').textContent='Buy '+sym;
+  document.getElementById('modal-sym').textContent=s.name+' • ₹'+cur.toLocaleString('en-IN');
+  document.getElementById('modal-qty').value='';
+  document.getElementById('modal-price').value=Math.round(cur);
+  updateCost();
+  document.getElementById('buy-modal').classList.add('open');
+}
+function closeModal(){document.getElementById('buy-modal').classList.remove('open');buyingSymbol=null;}
+document.getElementById('buy-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+function updateCost(){
+  const qty=parseInt(document.getElementById('modal-qty').value)||0;
+  const pr=parseFloat(document.getElementById('modal-price').value)||0;
+  const cost=qty*pr;
+  document.getElementById('cost-preview').textContent=`Total cost: ₹${cost.toLocaleString('en-IN',{maximumFractionDigits:0})} | Balance: ₹${(currentUser.balance||0).toLocaleString('en-IN')}`;
+}
+function confirmBuy(){
+  if(!buyingSymbol)return;
+  const qty=parseInt(document.getElementById('modal-qty').value);
+  const price=parseFloat(document.getElementById('modal-price').value);
+  if(!qty||!price||qty<1||price<1){showToast('Fill in valid qty and price','error');return;}
+  const cost=qty*price;
+  if(cost>(currentUser.balance||0)){showToast('Insufficient balance!','error');return;}
+  const s=STOCKS.find(x=>x.symbol===buyingSymbol);
+  currentUser.portfolio=currentUser.portfolio||[];
+  const ex=currentUser.portfolio.findIndex(h=>h.symbol===buyingSymbol);
+  if(ex>=0){const h=currentUser.portfolio[ex];const tq=h.qty+qty;h.buyPrice=+((h.qty*h.buyPrice+qty*price)/tq).toFixed(2);h.qty=tq;}
+  else{currentUser.portfolio.push({symbol:buyingSymbol,name:s.name,sector:s.sector,qty,buyPrice:price});}
+  currentUser.balance-=cost;
+  let users=JSON.parse(localStorage.getItem('sv_users')||'[]');
+  const idx=users.findIndex(u=>u.email===currentUser.email);
+  if(idx>=0)users[idx]=currentUser;
+  localStorage.setItem('sv_users',JSON.stringify(users));
+  localStorage.setItem('sv_current_user',JSON.stringify(currentUser));
+  document.getElementById('balance-display').textContent=(currentUser.balance||0).toLocaleString('en-IN');
+  closeModal();
+  renderCards(getFiltered());
+  showToast(`Bought ${qty} × ${buyingSymbol}!`);
+}
+function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=type==='error'?'var(--red)':'var(--accent)';t.style.color=type==='error'?'var(--red)':'var(--accent)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+renderCards(STOCKS);
+</script>
+</body>
+</html>
