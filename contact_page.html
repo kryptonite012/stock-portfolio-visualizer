@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us — StockVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --surface: #1e1e28;
+    --border: rgba(255,255,255,0.08);
+    --accent: #00e5a0;
+    --accent2: #7c6aff;
+    --red: #ff5470;
+    --amber: #ffb547;
+    --text: #f0f0f5;
+    --muted: #8888aa;
+    --font-serif: 'DM Serif Display', serif;
+    --font-sans: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-sans); min-height:100vh; display:flex; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width:220px; min-height:100vh;
+    background:var(--bg2);
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    padding:24px 0;
+    position:fixed; left:0; top:0; bottom:0;
+    z-index:100;
+  }
+  .sidebar-logo {
+    display:flex; align-items:center; gap:8px;
+    padding:0 24px 28px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:16px;
+  }
+  .sidebar-logo-icon { width:32px; height:32px; background:var(--accent); border-radius:7px; display:flex; align-items:center; justify-content:center; }
+  .sidebar-logo-icon svg { width:18px; height:18px; }
+  .sidebar-logo-name { font-family:var(--font-serif); font-size:18px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 24px;
+    cursor:pointer; color:var(--muted); font-size:14px;
+    border-left:3px solid transparent;
+    transition:all .15s; text-decoration:none;
+  }
+  .nav-item:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+  .nav-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(0,229,160,0.05); }
+  .nav-item svg { width:17px; height:17px; flex-shrink:0; }
+  .nav-section { padding:16px 24px 6px; font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
+  .sidebar-user {
+    margin-top:auto; padding:16px 24px;
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .avatar { width:34px; height:34px; background:var(--accent2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500; color:#fff; flex-shrink:0; }
+  .sidebar-user-name { font-size:13px; color:var(--text); }
+  .sidebar-user-email { font-size:11px; color:var(--muted); }
+  .logout-btn { margin-left:auto; cursor:pointer; color:var(--muted); font-size:13px; background:none; border:none; }
+  .logout-btn:hover { color:var(--red); }
+
+  /* ── Main ── */
+  .main { margin-left:220px; flex:1; padding:32px 36px; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .main { animation:fadeIn .3s ease; }
+
+  .page-header { margin-bottom:32px; }
+  .page-title { font-family:var(--font-serif); font-size:28px; }
+  .page-subtitle { font-size:13px; color:var(--muted); margin-top:4px; }
+
+  /* ── Contact Layout ── */
+  .contact-grid {
+    display:grid;
+    grid-template-columns:1fr 1.6fr;
+    gap:24px;
+    align-items:start;
+  }
+
+  /* Info Column */
+  .info-col { display:flex; flex-direction:column; gap:16px; }
+
+  .info-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px 24px;
+  }
+  .info-card-title { font-size:15px; font-weight:500; margin-bottom:16px; }
+
+  .contact-item {
+    display:flex; align-items:center; gap:14px;
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .contact-item:last-child { border-bottom:none; padding-bottom:0; }
+  .contact-icon {
+    width:38px; height:38px; flex-shrink:0;
+    background:rgba(0,229,160,0.1);
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .contact-icon svg { width:18px; height:18px; stroke:var(--accent); }
+  .contact-details .lbl { font-size:11px; color:var(--muted); margin-bottom:3px; }
+  .contact-details .val { font-family:var(--font-mono); font-size:14px; color:var(--text); }
+
+  /* Hours card */
+  .hours-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    font-size:13px;
+  }
+  .hours-row:last-child { border-bottom:none; padding-bottom:0; }
+  .hours-row .day { color:var(--muted); }
+  .hours-row .time { font-family:var(--font-mono); color:var(--text); }
+  .badge-open { background:rgba(0,229,160,0.12); color:var(--accent); font-size:10px; padding:2px 7px; border-radius:4px; font-family:var(--font-mono); }
+  .badge-closed { background:rgba(255,84,112,0.1); color:var(--red); font-size:10px; padding:2px 7px; border-radius:4px; font-family:var(--font-mono); }
+
+  /* Form Column */
+  .form-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px 30px;
+  }
+  .form-card-title { font-family:var(--font-serif); font-size:22px; margin-bottom:4px; }
+  .form-card-sub { font-size:13px; color:var(--muted); margin-bottom:24px; }
+
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width:100%; padding:10px 14px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-family:var(--font-sans); font-size:14px;
+    outline:none; transition:border .2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color:var(--accent); }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder { color:var(--muted); }
+  .form-group select option { background:var(--bg2); }
+  .form-group textarea { resize:vertical; min-height:110px; }
+
+  .btn-submit {
+    width:100%; padding:12px;
+    background:var(--accent); color:#0a0a0f;
+    font-family:var(--font-sans); font-size:14px; font-weight:500;
+    border:none; border-radius:10px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:opacity .2s, transform .1s;
+    margin-top:4px;
+  }
+  .btn-submit:hover { opacity:0.9; transform:translateY(-1px); }
+  .btn-submit:active { transform:translateY(0); }
+
+  /* Success state */
+  .success-banner {
+    background:rgba(0,229,160,0.08);
+    border:1px solid rgba(0,229,160,0.25);
+    border-radius:10px;
+    padding:14px 18px;
+    font-size:13px;
+    color:var(--accent);
+    display:none;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+  }
+  .success-banner.show { display:flex; }
+
+  /* Toast */
+  .toast {
+    position:fixed; bottom:24px; right:24px;
+    background:var(--surface); border:1px solid var(--accent);
+    color:var(--accent); padding:12px 18px; border-radius:10px;
+    font-size:13px; z-index:999;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s, transform .3s;
+    transform:translateY(10px);
+  }
+  .toast.show { opacity:1; pointer-events:auto; transform:translateY(0); }
+
+  @media(max-width:1000px) { .contact-grid { grid-template-columns:1fr; } }
+  @media(max-width:900px) { .sidebar{display:none;} .main{margin-left:0;} .form-row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 20 20" fill="none"><polyline points="2,14 7,8 11,11 18,4" stroke="#0a0a0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14,4 18,4 18,8" stroke="#0a0a0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <span class="sidebar-logo-name">StockVault</span>
+  </div>
+
+  <span class="nav-section">Main</span>
+  <a class="nav-item" href="dashboard.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+    Dashboard
+  </a>
+  <a class="nav-item" href="search.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg>
+    Search Stocks
+  </a>
+  <a class="nav-item" href="analytics.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="2,16 7,10 11,13 18,5"/><line x1="2" y1="16" x2="18" y2="16"/></svg>
+    Analytics
+  </a>
+
+  <span class="nav-section">Account</span>
+  <a class="nav-item" href="#" onclick="showToast('Settings coming soon!')">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="3"/><path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.2 4.2l1.1 1.1M14.7 14.7l1.1 1.1M4.2 15.8l1.1-1.1M14.7 5.3l1.1-1.1"/></svg>
+    Settings
+  </a>
+  <a class="nav-item active" href="contact_page.html">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6.5L9.2 10.3C9.7 10.7 10.3 10.7 10.8 10.3L16 6.5"/><rect x="2" y="4" width="16" height="12" rx="2"/></svg>
+    Contact Us
+  </a>
+
+  <div class="sidebar-user">
+    <div class="avatar" id="user-avatar">D</div>
+    <div>
+      <div class="sidebar-user-name" id="user-name">User</div>
+      <div class="sidebar-user-email" id="user-email"></div>
+    </div>
+    <button class="logout-btn" onclick="logout()" title="Logout">⇤</button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Contact Us</div>
+    <div class="page-subtitle">Get in touch with our support team — we're here to help.</div>
+  </div>
+
+  <div class="contact-grid">
+
+    <!-- Left: Info -->
+    <div class="info-col">
+
+      <div class="info-card">
+        <div class="info-card-title">Reach us directly</div>
+        <div class="contact-item">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7.00005L10.2 11.65C11.2667 12.45 12.7333 12.45 13.8 11.65L20 7"/>
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="contact-details">
+            <div class="lbl">Email Support</div>
+            <div class="val">support@stockvault.in</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10C20 16 12 22 12 22C12 22 4 16 4 10C4 7.87827 4.84285 5.84344 6.34315 4.34315C7.84344 2.84285 9.87827 2 12 2C14.1217 2 16.1566 2.84285 17.6569 4.34315C19.1571 5.84344 20 7.87827 20 10Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="contact-details">
+            <div class="lbl">Headquarters</div>
+            <div class="val">Greater Noida, India</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/>
+            </svg>
+          </div>
+          <div class="contact-details">
+            <div class="lbl">Phone</div>
+            <div class="val">+91 98765 43210</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">Support hours</div>
+        <div class="hours-row">
+          <span class="day">Monday – Friday</span>
+          <span class="time">9:00 AM – 9:00 PM</span>
+        </div>
+        <div class="hours-row">
+          <span class="day">Saturday</span>
+          <span class="time">10:00 AM – 6:00 PM</span>
+        </div>
+        <div class="hours-row">
+          <span class="day">Sunday</span>
+          <span class="time" style="color:var(--muted)">Closed</span>
+        </div>
+        <div class="hours-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <span class="day" style="color:var(--text)">Current status</span>
+          <span class="badge-open" id="status-badge">OPEN</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Form -->
+    <div class="form-card">
+      <div class="form-card-title">Send a message</div>
+      <div class="form-card-sub">Fill out the form and we'll get back to you within 24 hours.</div>
+
+      <form id="contact-form" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="contact-name" placeholder="Rahul Sharma" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="contact-email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="contact-category">
+            <option value="">-- Select a topic --</option>
+            <option value="portfolio">Portfolio / Holdings</option>
+            <option value="account">Account & Billing</option>
+            <option value="bug">Bug Report</option>
+            <option value="feature">Feature Request</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" id="contact-subject" placeholder="Briefly describe your issue" required>
+        </div>
+
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="contact-message" placeholder="Describe your issue in detail..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submit-btn">
+          Send Message
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </form>
+
+      <div class="success-banner" id="success-banner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Message sent! Our team will reach out to you within 24 hours.
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ── Auth guard ──
+let currentUser = JSON.parse(localStorage.getItem('sv_current_user'));
+if (!currentUser) window.location.href = 'index.html';
+
+document.getElementById('user-avatar').textContent = currentUser.name[0].toUpperCase();
+document.getElementById('user-name').textContent = currentUser.name;
+document.getElementById('user-email').textContent = currentUser.email;
+
+// Pre-fill name & email from logged-in user
+document.getElementById('contact-name').value = currentUser.name;
+document.getElementById('contact-email').value = currentUser.email;
+
+function logout() {
+  localStorage.removeItem('sv_current_user');
+  window.location.href = 'index.html';
+}
+
+// ── Support hours status ──
+(function () {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 6=Sat
+  const hour = now.getHours();
+  let isOpen = false;
+  if (day >= 1 && day <= 5 && hour >= 9 && hour < 21) isOpen = true;
+  if (day === 6 && hour >= 10 && hour < 18) isOpen = true;
+  const badge = document.getElementById('status-badge');
+  if (!isOpen) {
+    badge.textContent = 'CLOSED';
+    badge.className = 'badge-closed';
+  }
+})();
+
+// ── Form submit ──
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = 'Sending…';
+  btn.style.opacity = '0.75';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    document.getElementById('contact-form').reset();
+    // Re-fill user info after reset
+    document.getElementById('contact-name').value = currentUser.name;
+    document.getElementById('contact-email').value = currentUser.email;
+
+    btn.innerHTML = 'Message Sent ✓';
+    btn.style.opacity = '1';
+    document.getElementById('success-banner').classList.add('show');
+
+    setTimeout(() => {
+      btn.innerHTML = `Send Message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+      btn.disabled = false;
+      document.getElementById('success-banner').classList.remove('show');
+    }, 4000);
+  }, 1500);
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
