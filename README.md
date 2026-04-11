@@ -22,7 +22,8 @@ stock-portfolio/
 ├── index.html        # Login & Signup page
 ├── dashboard.html    # Portfolio overview
 ├── search.html       # Stock browsing & buying
-├── analytics.html    # Advanced analytics
+├── analytics.html  # Advanced analytics
+├── react.js  # react for app
 └── README.md         # Documentation
 🛠 Tech Stack
 Tech	Usage
