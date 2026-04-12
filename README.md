@@ -35,6 +35,7 @@ localStorage	Database simulation
 Google Fonts	Typography
 ⚙️ System Architecture
 🔹 Frontend Modules
+
 Page	Description
 index.html	User authentication
 dashboard.html	Portfolio summary & charts
@@ -63,6 +64,7 @@ Sample User Object:
   ]
 }
 📊 Features Breakdown
+
 🏠 Dashboard
 Portfolio value, invested amount, P&L
 📈 Line chart → performance over time
