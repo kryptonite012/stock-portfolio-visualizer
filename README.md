@@ -164,7 +164,7 @@ client/
 │   │   ├── StockCard.jsx
 │   │   ├── Chart.jsx
 │
-│   ├── pages/               # main pages (VERY IMPORTANT ⭐)
+│   ├── pages/               # main pages 
 │   │   ├── Home.jsx
 │   │   ├── Dashboard.jsx
 │   │   ├── Portfolio.jsx
