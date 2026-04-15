@@ -138,3 +138,89 @@ Feel free to fork this project and enhance it:
 Add new features
 Improve UI/UX
 Optimize performance
+
+
+
+stockvault/
+│── client/          # React Frontend
+│── server/          # Backend (Node + Express)
+│── README.md
+│── .gitignore
+│── package.json     # optional root scripts
+
+
+
+
+client/
+│── public/
+│   ├── index.html
+│   ├── favicon.svg
+│
+│── src/
+│   ├── assets/              # images, icons
+│   ├── components/          # reusable UI
+│   │   ├── Navbar.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── StockCard.jsx
+│   │   ├── Chart.jsx
+│
+│   ├── pages/               # main pages (VERY IMPORTANT ⭐)
+│   │   ├── Home.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Portfolio.jsx
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│
+│   ├── auth/                # authentication logic ⭐
+│   │   ├── AuthContext.jsx
+│   │   ├── ProtectedRoute.jsx
+│
+│   ├── services/            # API calls
+│   │   ├── api.js
+│   │   ├── stockService.js
+│   │   ├── authService.js
+│
+│   ├── utils/
+│   │   ├── priceSimulator.js   # your random stock logic 🔥
+│   │   ├── helpers.js
+│
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useStocks.js
+│
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── routes.jsx
+│
+│── package.json
+
+
+
+server/
+│── config/
+│   ├── db.js              # MongoDB connection
+│
+│── models/                # Mongoose models ⭐
+│   ├── User.js
+│   ├── Portfolio.js
+│   ├── Transaction.js
+│
+│── controllers/           # logic layer ⭐
+│   ├── authController.js
+│   ├── stockController.js
+│   ├── portfolioController.js
+│
+│── routes/                # API routes ⭐
+│   ├── authRoutes.js
+│   ├── stockRoutes.js
+│   ├── portfolioRoutes.js
+│
+│── middleware/
+│   ├── authMiddleware.js
+│   ├── errorMiddleware.js
+│
+│── utils/
+│   ├── generateToken.js
+│
+│── server.js
+│── package.json
