@@ -1,0 +1,40 @@
+{
+  "name": "stock-portfolio-visualizer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.0.4"
+  },
+  "description": "",
+  "main": "iindx.js",
+  "dependencies": {
+    "detect-libc": "^2.1.2",
+    "fdir": "^6.5.0",
+    "lightningcss": "^1.32.0",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "nanoid": "^3.3.11",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.4",
+    "postcss": "^8.5.10",
+    "rolldown": "^1.0.0-rc.15",
+    "source-map-js": "^1.2.1",
+    "tinyglobby": "^0.2.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kryptonite012/stock-portfolio-visualizer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kryptonite012/stock-portfolio-visualizer/issues"
+  },
+  "homepage": "https://github.com/kryptonite012/stock-portfolio-visualizer#readme"
+}
