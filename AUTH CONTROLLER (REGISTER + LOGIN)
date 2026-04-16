@@ -1,5 +1,7 @@
-import User from "../models/User.js";
+import express from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
 // REGISTER
@@ -46,22 +48,13 @@ export const loginUser = async (req, res) => {
   }
 };
 
-
-import express from "express";
-import { registerUser, loginUser } from "../controllers/authController.js";
-
 const router = express.Router();
-
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-export default router;
+export const authRouter = router;
 
-
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
@@ -69,18 +62,14 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
       req.user = await User.findById(decoded.id).select("-password");
-
-      next();
+      return next();
     } catch (error) {
-      res.status(401).json({ message: "Not authorized, token failed" });
+      return res.status(401).json({ message: "Not authorized, token failed" });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: "No token, not authorized" });
+    return res.status(401).json({ message: "No token, not authorized" });
   }
 };
-
-export default protect;

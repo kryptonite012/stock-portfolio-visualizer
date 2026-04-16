@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 
 const app = express();
-app.get("/",(req , res) => {
-               res.send("hello world");
+app.get("/", (req, res) => {
+  res.send("hello world");
 });
-app.listen(30000, () =>{
-               console.log("this is my serever http://localhost:30000");
+app.listen(30000, () => {
+  console.log("this is my server http://localhost:30000");
 });
