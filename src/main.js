@@ -8,6 +8,8 @@ import { applyChartDefaults, destroyCharts } from './ui/charts.js'
 import { setupPalette } from './ui/palette.js'
 import { checkAlerts } from './ui/trade.js'
 import { $, $$, icon } from './ui/dom.js'
+import { toast } from './ui/toast.js'
+import { canInstall, promptInstall, onInstallChange, isNativeApp, RELEASES_URL } from './ui/install.js'
 import auth from './views/auth.js'
 import dashboard from './views/dashboard.js'
 import stocks from './views/stocks.js'
@@ -58,12 +60,14 @@ function shell() {
         <nav class="nav" aria-label="Main">${nav}</nav>
         <div class="sidebar-foot">
           <div class="market-status" data-status></div>
+          ${isNativeApp ? '' : `<a class="get-apps" href="${RELEASES_URL}" target="_blank" rel="noopener">${icon('download')} Android &amp; desktop apps</a>`}
         </div>
       </aside>
       <div class="main">
         <header class="topbar">
           <button class="search-trigger" data-palette>${icon('search')}<span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
           <div class="topbar-stats" data-stats></div>
+          <button class="btn xs primary install-btn" data-install hidden>${icon('install')} Install app</button>
           <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"></button>
           <div class="user">
             <span class="avatar" aria-hidden="true"></span>
@@ -76,6 +80,7 @@ function shell() {
   $('[data-theme-toggle]').addEventListener('click', toggleTheme)
   $('[data-logout]').addEventListener('click', () => store.logout())
   $('[data-palette]').addEventListener('click', () => openPalette())
+  $('[data-install]').addEventListener('click', install)
 }
 
 function updateShell() {
@@ -91,8 +96,15 @@ function updateShell() {
   $('[data-status]').innerHTML = `
     <span><i class="dot"></i> NSE &amp; MCX · simulated</span>
     <span><i class="dot ${crypto === 'live' ? '' : 'off'}"></i> Crypto · ${crypto === 'live' ? 'live' : crypto === 'connecting' ? 'connecting' : 'simulated'}</span>`
+  $('[data-install]').hidden = !canInstall()
   $('[data-theme-toggle]').innerHTML = icon(effectiveTheme() === 'dark' ? 'sun' : 'moon')
 }
+
+// ---------- install ----------
+async function install() {
+  if (await promptInstall()) toast('StockVault installed. Open it from your home screen or app list.', { tone: 'success' })
+}
+onInstallChange(() => updateShell())
 
 // ---------- routing ----------
 function resolve() {
@@ -180,6 +192,8 @@ const openPalette = setupPalette(() => {
   return [
     ...Object.entries(routes).map(([path, r]) => ({ label: `Go to ${r.label}`, hint: 'Page', run: () => (location.hash = `#${path}`) })),
     { label: 'Toggle dark mode', hint: 'T', run: toggleTheme },
+    ...(canInstall() ? [{ label: 'Install app on this device', hint: 'App', run: install }] : []),
+    ...(isNativeApp ? [] : [{ label: 'Download Android & desktop apps', hint: 'GitHub', run: () => window.open(RELEASES_URL, '_blank', 'noopener') }]),
     { label: 'Sign out', hint: escapeHtml(store.user.email), run: () => store.logout() },
   ]
 })

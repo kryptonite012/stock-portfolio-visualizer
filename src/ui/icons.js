@@ -19,6 +19,7 @@ const paths = {
   refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
   coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
   gem: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+  install: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 6v8"/><path d="m9 11 3 3 3-3"/><path d="M10 18h4"/>',
   logo: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
 }
 

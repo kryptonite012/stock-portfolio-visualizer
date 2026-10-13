@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.kryptonite012.stockvault",
+  "appName": "StockVault",
+  "webDir": "dist-app",
+  "backgroundColor": "#0b0d12",
+  "android": {
+    "allowMixedContent": false
+  }
+}

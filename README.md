@@ -2,6 +2,18 @@
 
 **Live app:** https://kryptonite012.github.io/stock-portfolio-visualizer/
 
+## 📲 Get the app
+
+| Device | How |
+| --- | --- |
+| **Any phone or computer** | Open the live app and choose **Install app** (in the top bar, or your browser's menu → *Install* / *Add to Home screen*). It gets its own icon and works offline. |
+| **Android** | Download `StockVault-…-android.apk` from [the latest release](https://github.com/kryptonite012/stock-portfolio-visualizer/releases/latest) and open it on your phone. Allow "install unknown apps" if asked. |
+| **Windows** | Download `StockVault-Setup-….exe` from [the latest release](https://github.com/kryptonite012/stock-portfolio-visualizer/releases/latest). If SmartScreen appears, click **More info → Run anyway**. |
+| **Mac** | Download `StockVault-…-mac.dmg`, drag StockVault to Applications. If macOS blocks the first launch: **System Settings → Privacy & Security → Open Anyway**. |
+| **Linux** | Download `StockVault-…-linux.AppImage`, `chmod +x` it and run it. |
+
+The installers aren't code-signed (that needs paid Apple/Microsoft certificates), which is why Windows and macOS warn on first launch.
+
 StockVault is a practice trading app that runs entirely in the browser. You manage a virtual portfolio across Indian stocks, commodities and crypto, analyse its performance and learn the financial metrics behind it. It needs no backend and no paid APIs.
 
 ## 🚀 Highlights
@@ -20,7 +32,8 @@ StockVault is a practice trading app that runs entirely in the browser. You mana
 - 🌙 **Dark mode** that follows your system setting, with a manual toggle
 - 📥 **CSV export** of holdings and order history
 - 🔐 Local accounts. Passwords are salted and hashed with SHA-256 via Web Crypto, never stored in plain text.
-- 📱 Responsive layout with a bottom tab bar on phones, smooth page transitions (View Transitions API) and an installable web app manifest
+- 📱 **Apps for every device**: an installable offline web app (PWA), an Android app, and Windows, Mac and Linux desktop apps
+- Responsive layout with a bottom tab bar on phones and smooth page transitions (View Transitions API)
 - ♿ Accessible: native `<dialog>` modals, keyboard focus kept during live updates, `prefers-reduced-motion` respected
 
 ## 📡 Where prices come from
@@ -44,9 +57,22 @@ npm run build     # build for production into dist/
 
 Click **Try the demo account** for a pre-filled portfolio, or create your own account.
 
+## 🛠 Building the apps yourself
+
+| Command | What it does |
+| --- | --- |
+| `npm run desktop` | Builds the app and opens it in a desktop window (Electron) |
+| `npm run desktop:dist` | Builds an installer for your OS into `release/` |
+| `npx cap add android` then `npm run android:sync` | Creates the Android project in `android/` and copies the app into it. Open `android/` in Android Studio to run it on a phone. |
+
+`npm run build:app` builds the copy used by the apps (`dist-app/`, relative paths, no service worker).
+
 ## 🌐 Deployment
 
-Every push to `main` runs `.github/workflows/deploy.yml`. It installs dependencies, runs the tests, builds the app and publishes `dist/` to GitHub Pages. One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
+Every push to `main` runs two workflows:
+
+- `.github/workflows/apps.yml` builds the Android APK and the Windows, macOS and Linux installers, and publishes them as a new GitHub Release.
+- `.github/workflows/deploy.yml` runs the tests, builds the website (with its service worker) and publishes `dist/` to GitHub Pages. One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
 
 `vite.config.js` sets the base path to `/stock-portfolio-visualizer/` for builds, to match the Pages URL. If you rename the repository, update that path.
 
@@ -92,4 +118,5 @@ Holdings use the weighted average buy price. Sells record realised P&L.
 - Real NSE and MCX prices through a small server-side proxy (browsers can't call NSE or Yahoo Finance directly)
 - Cloud accounts. `AUTH CONTROLLER (REGISTER + LOGIN)` and `iindx.js` are early Express/MongoDB sketches for this.
 - More indicators (MACD, Bollinger Bands) and comparison with a benchmark index
-- PDF reports and offline support via a service worker
+- PDF reports
+- Signed release builds and Google Play / app store listings

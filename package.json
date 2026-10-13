@@ -8,23 +8,90 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:app": "vite build --mode app --outDir dist-app",
+    "desktop": "npm run build:app && electron .",
+    "desktop:dist": "npm run build:app && electron-builder --publish never",
+    "android:sync": "npm run build:app && cap sync android"
   },
   "dependencies": {
     "chart.js": "^4.5.1"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "vite": "^8.0.4",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.4"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kryptonite012/stock-portfolio-visualizer.git"
   },
-  "keywords": ["stocks", "portfolio", "visualizer", "chartjs", "vite"],
+  "keywords": [
+    "stocks",
+    "portfolio",
+    "visualizer",
+    "chartjs",
+    "vite"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/kryptonite012/stock-portfolio-visualizer/issues"
   },
-  "homepage": "https://github.com/kryptonite012/stock-portfolio-visualizer#readme"
+  "homepage": "https://github.com/kryptonite012/stock-portfolio-visualizer#readme",
+  "main": "electron/main.cjs",
+  "author": "kryptonite012",
+  "build": {
+    "appId": "io.github.kryptonite012.stockvault",
+    "productName": "StockVault",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "dist-app/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "StockVault-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.finance",
+      "artifactName": "StockVault-${version}-mac.${ext}",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Finance",
+      "artifactName": "StockVault-${version}-linux.${ext}",
+      "syncDesktopName": true,
+      "executableName": "stockvault"
+    }
+  },
+  "desktopName": "stockvault.desktop"
 }

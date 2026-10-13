@@ -1,0 +1,116 @@
+name: Build apps
+
+# Builds the Android APK and the Windows, macOS and Linux installers, then
+# publishes them together as a GitHub Release (Releases → Latest).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apps-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERSION: 1.0.${{ github.run_number }}
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+      - run: npm run build:app
+      - name: Create Android project
+        run: npx cap add android
+      - name: Generate app icons and splash screen
+        run: >
+          npx --yes @capacitor/assets@3.0.5 generate --android
+          --iconBackgroundColor '#4f46e5' --iconBackgroundColorDark '#4f46e5'
+          --splashBackgroundColor '#0b0d12' --splashBackgroundColorDark '#0b0d12'
+      - run: npx cap sync android
+      - name: Set version and signing key
+        run: |
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"$VERSION\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+          # Same key every build, so new versions install over old ones (see android-signing/README.md).
+          mkdir -p ~/.android && cp android-signing/debug.keystore ~/.android/debug.keystore
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk "StockVault-$VERSION-android.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: StockVault-*-android.apk
+          if-no-files-found: error
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm pkg set version=${{ env.VERSION }}
+      - run: npm run build:app
+      - name: Package installer
+        run: npx electron-builder --publish never
+        env:
+          # No paid code-signing certificate: skip looking for one.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+          if-no-files-found: error
+
+  release:
+    needs: [android, desktop]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: StockVault ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: dist/*
+          body: |
+            Download the file for your device below (under **Assets**).
+
+            | Device | File | How to install |
+            | --- | --- | --- |
+            | **Android** | `StockVault-${{ env.VERSION }}-android.apk` | Open the file on your phone. If asked, allow your browser or file manager to "install unknown apps", then tap **Install**. |
+            | **Windows** | `StockVault-Setup-${{ env.VERSION }}.exe` | Run it. If Windows SmartScreen appears, click **More info → Run anyway** (the app isn't code-signed). |
+            | **Mac** | `StockVault-${{ env.VERSION }}-mac.dmg` | Open it and drag StockVault to Applications. On first launch, if macOS blocks it, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
+            | **Linux** | `StockVault-${{ env.VERSION }}-linux.AppImage` | Make it executable (`chmod +x`) and run it. |
+
+            Or use it in your browser, and install it from there: https://kryptonite012.github.io/stock-portfolio-visualizer/
