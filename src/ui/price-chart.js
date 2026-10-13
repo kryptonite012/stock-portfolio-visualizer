@@ -1,5 +1,5 @@
 import { sma } from '../lib/indicators.js'
-import { money } from '../lib/format.js'
+import { money, moneyCompact } from '../lib/format.js'
 import { market } from '../lib/market.js'
 import { makeChart, palette, gradient } from './charts.js'
 
@@ -34,7 +34,8 @@ export function createPriceChart(canvas, { track = true } = {}) {
       },
       scales: {
         x: { ticks: { maxTicksLimit: 6, maxRotation: 0 }, grid: { display: false } },
-        y: { ticks: { callback: (v) => money(v) } },
+        // Short labels (₹98L) for big prices so the axis fits on a phone.
+        y: { ticks: { callback: (v) => (Math.abs(v) >= 1e5 ? moneyCompact(v) : money(v)) } },
       },
     },
   }, { track })

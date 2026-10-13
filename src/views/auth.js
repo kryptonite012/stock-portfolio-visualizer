@@ -4,6 +4,7 @@ import { applyTrade } from '../lib/portfolio.js'
 import { money, percent, tone } from '../lib/format.js'
 import { STARTING_BALANCE } from '../data/assets.js'
 import { $, icon } from '../ui/dom.js'
+import { isNativeApp, RELEASES_URL } from '../ui/install.js'
 
 // Demo account starts with a handful of positions bought at historical prices.
 function seedDemo(user) {
@@ -64,7 +65,8 @@ export default {
           </form>
           <div class="divider"><span>or</span></div>
           <button class="btn ghost block" data-demo>Try the demo account</button>
-          <p class="muted tiny">Accounts live only in this browser's storage.</p>
+          <p class="muted tiny">Accounts live only on this device.</p>
+          ${isNativeApp ? '' : `<a class="get-apps center" href="${RELEASES_URL}" target="_blank" rel="noopener">${icon('download')} Get the Android &amp; desktop apps</a>`}
         </section>
       </div>`
 

@@ -188,7 +188,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); box-shad
 .topbar {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; gap: 12px;
-  padding: 12px 28px;
+  padding: calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 28px 12px;
   background: color-mix(in srgb, var(--bg) 80%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -381,20 +381,20 @@ dialog::backdrop { background: #05060a99; backdrop-filter: blur(3px); }
   .layout { grid-template-columns: 1fr; }
   .sidebar {
     position: fixed; top: auto; bottom: 0; left: 0; right: 0; z-index: 20;
-    height: auto; padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    height: auto; padding: 6px 8px calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
     flex-direction: row; border-right: 0; border-top: 1px solid var(--border);
   }
   .sidebar .brand, .sidebar-foot { display: none; }
   .nav { grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; }
   .nav a { flex-direction: column; gap: 2px; padding: 6px; font-size: 0.7rem; }
-  .topbar { padding: 10px 16px; }
+  .topbar { padding: calc(10px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px 10px; }
   .search-trigger span, .search-trigger kbd, .topbar-stats span:first-child { display: none; }
   .search-trigger { width: 38px; padding: 0; justify-content: center; }
   #view:not(.bare) { padding: 16px 16px 96px; }
   .kpis { gap: 10px; }
   .kpi-value { font-size: 1.15rem; }
   .auth { grid-template-columns: 1fr; }
-  .auth-hero { padding: 32px 16px 64px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .auth-hero { padding: calc(32px + var(--safe-area-inset-top, env(safe-area-inset-top, 0px))) 16px 64px; border-right: 0; border-bottom: 1px solid var(--border); }
   .auth-card { margin: 24px 0; }
   .kv.grid4 { grid-template-columns: auto 1fr; }
 }
@@ -417,4 +417,17 @@ dialog::backdrop { background: #05060a99; backdrop-filter: blur(3px); }
   .nav a { font-size: 0.62rem; padding: 6px 2px; }
   .stocks-table th:nth-child(3), .stocks-table td:nth-child(3),
   .stocks-table th:nth-child(6), .stocks-table td:nth-child(6) { display: none; }
+}
+
+/* ---------- app install ---------- */
+.get-apps { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.78rem; font-weight: 500; }
+.get-apps .icon { width: 15px; height: 15px; }
+.get-apps.center { justify-content: center; margin-top: 0; }
+.install-btn .icon { width: 15px; height: 15px; }
+@media (max-width: 760px) {
+  .install-btn { padding: 0 8px; }
+}
+@media (max-width: 760px) {
+  /* Keep toasts above the bottom tab bar. */
+  .toasts { bottom: calc(76px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); right: 12px; left: 12px; max-width: none; }
 }
