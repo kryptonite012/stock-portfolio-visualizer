@@ -1,5 +1,7 @@
 # 📈 StockVault: Stock Portfolio Visualizer
 
+**Live app:** https://kryptonite012.github.io/stock-portfolio-visualizer/
+
 StockVault is a practice trading app that runs entirely in the browser. You manage a virtual portfolio across Indian stocks, commodities and crypto, analyse its performance and learn the financial metrics behind it. It needs no backend and no paid APIs.
 
 ## 🚀 Highlights
@@ -41,6 +43,12 @@ npm run build     # build for production into dist/
 ```
 
 Click **Try the demo account** for a pre-filled portfolio, or create your own account.
+
+## 🌐 Deployment
+
+Every push to `main` runs `.github/workflows/deploy.yml`. It installs dependencies, runs the tests, builds the app and publishes `dist/` to GitHub Pages. One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
+
+`vite.config.js` sets the base path to `/stock-portfolio-visualizer/` for builds, to match the Pages URL. If you rename the repository, update that path.
 
 ## 🧱 Project structure
 
