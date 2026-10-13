@@ -1,228 +1,69 @@
-📈 StockVault — Stock Portfolio Visualizer
+# 📈 StockVault: Stock Portfolio Visualizer
 
-StockVault is a fully frontend-powered Stock Portfolio Visualizer that simulates a real-world stock trading experience. It allows users to manage a virtual investment portfolio, analyze performance, and understand financial metrics — all without requiring any backend or paid APIs.
+StockVault simulates a stock trading experience entirely in the browser. You manage a virtual portfolio on a live-simulated Indian (NSE) equity market, analyse its performance and learn the financial metrics behind it. It needs no backend and no paid APIs.
 
-🚀 Key Highlights
-💼 Virtual portfolio with ₹5,00,000 starting balance
-📊 Interactive charts & analytics (6+ chart types)
-🔐 Authentication system using localStorage
-📈 Real-time price simulation (auto-refresh)
-📱 Fully responsive design
-⚡ Zero backend — runs entirely in browser
-🎯 What Problem It Solves
+## 🚀 Highlights
 
-StockVault helps beginners:
+- 💼 Virtual portfolio with ₹5,00,000 starting cash
+- 📈 **Live market simulation**: prices tick every 3 s using geometric Brownian motion, on top of 6 months of history that stays the same for the whole day
+- 📊 **Interactive charts** (Chart.js): performance, allocation, P&L, sector exposure, a histogram of daily returns, and stock charts with SMA 20/50 and RSI 14
+- 🧠 **Risk analytics**: annualised volatility, Sharpe ratio, max drawdown, HHI concentration, diversification score, cash ratio
+- 🔔 **Price alerts**, shown as in-app toasts and as browser notifications when the tab is in the background
+- ⭐ **Watchlist** and top movers with sparklines
+- ⌨️ **Command palette** (`Ctrl/⌘ K`) and keyboard shortcuts (`g d` / `g m` / `g a` / `g h` to switch pages, `t` to switch theme)
+- 🌙 **Dark mode** that follows your system setting, with a manual toggle
+- 📥 **CSV export** of holdings and order history
+- 🔐 Local accounts. Passwords are salted and hashed with SHA-256 via Web Crypto, never stored in plain text.
+- 📱 Responsive layout with a bottom tab bar on phones, smooth page transitions (View Transitions API) and an installable web app manifest
+- ♿ Accessible: native `<dialog>` modals, keyboard focus kept during live updates, `prefers-reduced-motion` respected
 
-Understand how stock portfolios work
-Visualize gains/losses in real-time
-Learn diversification & risk concepts
-Practice trading without real money
-🧱 Project Structure
-stock-portfolio/
-├── index.html        # Login & Signup page
-├── dashboard.html    # Portfolio overview
-├── search.html       # Stock browsing & buying
-├── analytics.html  # Advanced analytics
-├── react.js  # react for app
-└── README.md         # Documentation
-🛠 Tech Stack
-Tech	Usage
-HTML5	Structure
-CSS3	UI, animations, responsiveness
-JavaScript (Vanilla)	Core logic & state
-Chart.js	Data visualization
-localStorage	Database simulation
-Google Fonts	Typography
-⚙️ System Architecture
-🔹 Frontend Modules
+## ▶️ Run it
 
-Page	Description
-index.html	User authentication
-dashboard.html	Portfolio summary & charts
-search.html	Stock discovery & trading
-analytics.html	Deep insights & metrics
-🔹 Data Layer (localStorage)
+```bash
+npm install
+npm run dev       # start the dev server at http://localhost:5173
+npm test          # run the unit tests (Vitest)
+npm run build     # build for production into dist/
+```
 
-Acts as a mock database:
+Click **Try the demo account** for a pre-filled portfolio, or create your own account.
 
-sv_users → Stores all users
-sv_current_user → Active session
-Sample User Object:
-{
-  "name": "Rahul Sharma",
-  "email": "rahul@example.com",
-  "password": "password123",
-  "balance": 500000,
-  "portfolio": [
-    {
-      "symbol": "TCS",
-      "name": "Tata Consultancy Services",
-      "sector": "IT",
-      "qty": 5,
-      "buyPrice": 3800
-    }
-  ]
-}
-📊 Features Breakdown
+## 🧱 Project structure
 
-🏠 Dashboard
-Portfolio value, invested amount, P&L
-📈 Line chart → performance over time
-🍩 Donut chart → stock allocation
-📊 Sector exposure (bar chart)
-📋 Holdings table with live profit/loss
-🔄 Auto-refresh every 15 seconds
-🔍 Stock Search & Trading
-Browse top Indian stocks (NSE-based)
-🔎 Search by name or symbol
-🎯 Filter by sector
-📉 Mini sparkline charts
-💸 Buy stocks with custom quantity
-📊 Advanced Analytics
-📈 Total return %
-🥇 Best & worst performers
-📅 12-month simulated growth chart
-📊 Profit/Loss bar visualization
-🧭 Sector distribution (polar chart)
-⚠️ Risk metrics:
-Concentration risk
-Diversification score
-Cash ratio
-💡 Core Concepts Implemented
-🔐 Authentication (Login/Signup system)
-🧠 State management using localStorage
-🔄 CRUD operations (portfolio management)
-📊 Financial calculations:
-Profit & Loss
-Return %
-Portfolio weight
-Sector exposure
-📱 Responsive UI design
-📉 Stock Price Simulation
+```
+index.html              # App entry
+public/                 # favicon, web app manifest
+src/
+├── main.js             # App shell, hash router, theme, shortcuts
+├── style.css           # Design tokens (light/dark) and all styles
+├── data/stocks.js      # Stock list (symbol, sector, volatility, drift)
+├── lib/
+│   ├── market.js       # Market simulator (history + live ticks)
+│   ├── portfolio.js    # Pure portfolio maths and trade logic
+│   ├── indicators.js   # SMA, EMA, RSI, volatility, Sharpe, drawdown
+│   ├── store.js        # Accounts and data saved in localStorage
+│   ├── format.js       # Intl formatting (en-IN, ₹)
+│   └── csv.js          # CSV export
+├── ui/                 # Charts, modals, trade/detail dialogs, palette, toasts
+└── views/              # auth, dashboard, market, analytics, activity
+tests/                  # Vitest unit tests for lib/
+```
 
-Since no external API is used:
+## 💾 Data layer (localStorage)
 
-Prices are generated dynamically
-Fluctuate within ±8% range
-Simulates real market movement
-Updates every session
-▶️ How to Run
-Download or clone the project
-Open index.html in a browser
-Choose:
-👉 “Try Demo Account”
-OR create a new account
+| Key               | Contents                                                          |
+| ----------------- | ----------------------------------------------------------------- |
+| `sv_users`        | Every account: balance, holdings, orders, watchlist, alerts       |
+| `sv_current_user` | Email of the signed-in account                                     |
+| `sv_prefs`        | UI preferences (theme)                                            |
 
-✅ No installation required
-✅ No backend needed
-✅ Works offline (except fonts)
+Holdings use the weighted average buy price. Sells record realised P&L.
 
-🎨 UI/UX Features
-Smooth animations & transitions
+> ⚠️ Everything is stored on your device and is for learning only. It is not real security and not financial advice.
 
-Clean dashboard layout
-Minimal, modern design
-Mobile-friendly interface
-Color-coded profit/loss indicators
+## 🔮 Roadmap
 
-🔮 Future Improvements
-🔗 Integration with real stock APIs (e.g., NSE, Yahoo Finance)
-📊 More advanced indicators (moving averages, RSI)
-🌙 Dark mode support
-📥 Export portfolio as PDF/CSV
-👥 Multi-user cloud database (Firebase / MongoDB)
-🤝 Contribution
-
-Feel free to fork this project and enhance it:
-
-Add new features
-Improve UI/UX
-Optimize performance
-
-
-
-stockvault/
-│── client/          # React Frontend
-│── server/          # Backend (Node + Express)
-│── README.md
-│── .gitignore
-│── package.json     # optional root scripts
-
-
-
-
-client/
-│── public/
-│   ├── index.html
-│   ├── favicon.svg
-│
-│── src/
-│   ├── assets/              # images, icons
-│   ├── components/          # reusable UI
-│   │   ├── Navbar.jsx
-│   │   ├── Sidebar.jsx
-│   │   ├── StockCard.jsx
-│   │   ├── Chart.jsx
-│
-│   ├── pages/               # main pages 
-│   │   ├── Home.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── Portfolio.jsx
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│
-│   ├── auth/                # authentication logic ⭐
-│   │   ├── AuthContext.jsx
-│   │   ├── ProtectedRoute.jsx
-│
-│   ├── services/            # API calls
-│   │   ├── api.js
-│   │   ├── stockService.js
-│   │   ├── authService.js
-│
-│   ├── utils/
-│   │   ├── priceSimulator.js   # your random stock logic 🔥
-│   │   ├── helpers.js
-│
-│   ├── hooks/
-│   │   ├── useAuth.js
-│   │   ├── useStocks.js
-│
-│   ├── App.jsx
-│   ├── main.jsx
-│   ├── routes.jsx
-│
-│── package.json
-
-
-
-server/
-│── config/
-│   ├── db.js              # MongoDB connection
-│
-│── models/                # Mongoose models ⭐
-│   ├── User.js
-│   ├── Portfolio.js
-│   ├── Transaction.js
-│
-│── controllers/           # logic layer ⭐
-│   ├── authController.js
-│   ├── stockController.js
-│   ├── portfolioController.js
-│
-│── routes/                # API routes ⭐
-│   ├── authRoutes.js
-│   ├── stockRoutes.js
-│   ├── portfolioRoutes.js
-│
-│── middleware/
-│   ├── authMiddleware.js
-│   ├── errorMiddleware.js
-│
-│── utils/
-│   ├── generateToken.js
-│
-│── server.js
-│── package.json.
-
-created.......................
+- Real market data (NSE / Yahoo Finance) behind a small API
+- Cloud accounts. `AUTH CONTROLLER (REGISTER + LOGIN)` and `iindx.js` are early Express/MongoDB sketches for this.
+- More indicators (MACD, Bollinger Bands) and comparison with a benchmark index
+- PDF reports and offline support via a service worker

@@ -1,60 +1,181 @@
 import './style.css'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.js'
+import { store } from './lib/store.js'
+import { market } from './lib/market.js'
+import { summarize } from './lib/portfolio.js'
+import { money, percent, tone, escapeHtml } from './lib/format.js'
+import { injectIcons } from './ui/icons.js'
+import { applyChartDefaults, destroyCharts } from './ui/charts.js'
+import { setupPalette } from './ui/palette.js'
+import { checkAlerts } from './ui/trade.js'
+import { $, $$, icon } from './ui/dom.js'
+import auth from './views/auth.js'
+import dashboard from './views/dashboard.js'
+import marketView from './views/market.js'
+import analytics from './views/analytics.js'
+import history from './views/history.js'
 
-document.querySelector('#app').innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${javascriptLogo}" class="framework" alt="JavaScript logo"/>
-    <img src=${viteLogo} class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+const routes = {
+  '/dashboard': { view: dashboard, icon: 'dashboard', label: 'Dashboard' },
+  '/market': { view: marketView, icon: 'market', label: 'Market' },
+  '/analytics': { view: analytics, icon: 'analytics', label: 'Analytics' },
+  '/activity': { view: history, icon: 'history', label: 'Activity' },
+}
 
-<div class="ticks"></div>
+const app = $('#app')
+let current = null // { path, instance }
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src=${viteLogo} alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-          <img class="button-icon" src="${javascriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+// ---------- theme ----------
+const media = matchMedia('(prefers-color-scheme: dark)')
+function effectiveTheme() {
+  const t = store.prefs.theme
+  return t === 'system' ? (media.matches ? 'dark' : 'light') : t
+}
+function applyTheme() {
+  document.documentElement.dataset.theme = effectiveTheme()
+  $('meta[name=theme-color]')?.setAttribute('content', effectiveTheme() === 'dark' ? '#0b0d12' : '#f6f7fb')
+  applyChartDefaults()
+}
+function toggleTheme() {
+  store.setPref('theme', effectiveTheme() === 'dark' ? 'light' : 'dark')
+  applyTheme()
+  rerender()
+}
+media.addEventListener('change', () => { applyTheme(); rerender() })
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+// ---------- shell ----------
+function shell() {
+  const nav = Object.entries(routes)
+    .map(([path, r]) => `<a href="#${path}" data-path="${path}">${icon(r.icon)}<span>${r.label}</span></a>`)
+    .join('')
+  app.innerHTML = `
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="brand" href="#/dashboard">${icon('logo')}<span>StockVault</span></a>
+        <nav class="nav" aria-label="Main">${nav}</nav>
+        <div class="sidebar-foot">
+          <div class="market-status"><i class="dot"></i> Market live</div>
+        </div>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <button class="search-trigger" data-palette>${icon('search')}<span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
+          <div class="topbar-stats" data-stats></div>
+          <button class="icon-btn" data-theme-toggle aria-label="Toggle theme"></button>
+          <div class="user">
+            <span class="avatar" aria-hidden="true"></span>
+            <button class="icon-btn" data-logout aria-label="Sign out" title="Sign out">${icon('logout')}</button>
+          </div>
+        </header>
+        <main id="view" tabindex="-1"></main>
+      </div>
+    </div>`
+  $('[data-theme-toggle]').addEventListener('click', toggleTheme)
+  $('[data-logout]').addEventListener('click', () => store.logout())
+  $('[data-palette]').addEventListener('click', () => openPalette())
+}
 
-setupCounter(document.querySelector('#counter'))
+function updateShell() {
+  const u = store.user
+  if (!u || !$('.layout')) return
+  const s = summarize(u, market)
+  $('[data-stats]').innerHTML = `
+    <span>${icon('wallet')} ${money(s.cash)}</span>
+    <span class="${tone(s.dayPnl)}">Today ${percent(s.dayPnlPct)}</span>`
+  $('.avatar').textContent = u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  $('.avatar').title = `${u.name} · ${u.email}`
+  $('[data-theme-toggle]').innerHTML = icon(effectiveTheme() === 'dark' ? 'sun' : 'moon')
+}
+
+// ---------- routing ----------
+function resolve() {
+  if (!store.user) return { path: '/login', view: auth }
+  const path = location.hash.slice(1) || '/dashboard'
+  if (!routes[path]) {
+    location.replace('#/dashboard')
+    return { path: '/dashboard', view: dashboard }
+  }
+  return { path, view: routes[path].view }
+}
+
+function render() {
+  const { path, view } = resolve()
+  const swap = () => {
+    destroyCharts()
+    if (path === '/login') {
+      app.innerHTML = '<main id="view" class="bare"></main>'
+    } else if (!$('.layout')) {
+      shell()
+    }
+    // Fresh element per view so listeners from the previous view don't leak.
+    const root = $('#view').cloneNode(false)
+    $('#view').replaceWith(root)
+    current = { path, instance: view.mount(root) }
+    document.title = `${view.title} · StockVault`
+    $$('.nav a').forEach((a) => a.setAttribute('aria-current', a.dataset.path === path ? 'page' : 'false'))
+    updateShell()
+  }
+  // Progressive enhancement: smooth cross-fade between pages where supported.
+  if (document.startViewTransition && current && current.path !== path && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.startViewTransition(swap)
+  } else {
+    swap()
+  }
+}
+
+function rerender() {
+  current = null
+  render()
+}
+
+window.addEventListener('hashchange', () => {
+  if (current?.path !== resolve().path) render()
+})
+
+// Session changes (login/logout) trigger a full re-route; data changes just update.
+let lastEmail = store.email
+store.subscribe(() => {
+  if (store.email !== lastEmail) {
+    lastEmail = store.email
+    if (store.email && (!location.hash || location.hash === '#/login')) location.hash = '#/dashboard'
+    rerender()
+    return
+  }
+  current?.instance?.update?.()
+  updateShell()
+})
+
+market.subscribe(() => {
+  current?.instance?.update?.()
+  updateShell()
+  checkAlerts()
+})
+
+// Keyboard shortcuts: g then d/m/a/h to navigate.
+let pendingG = false
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest('input, textarea, select, dialog') || e.metaKey || e.ctrlKey || e.altKey || !store.user) return
+  if (pendingG) {
+    const map = { d: '/dashboard', m: '/market', a: '/analytics', h: '/activity' }
+    if (map[e.key]) location.hash = `#${map[e.key]}`
+    pendingG = false
+  } else if (e.key === 'g') {
+    pendingG = true
+    setTimeout(() => (pendingG = false), 1000)
+  } else if (e.key === 't') {
+    toggleTheme()
+  }
+})
+
+const openPalette = setupPalette(() => {
+  if (!store.user) return []
+  return [
+    ...Object.entries(routes).map(([path, r]) => ({ label: `Go to ${r.label}`, hint: 'Page', run: () => (location.hash = `#${path}`) })),
+    { label: 'Toggle dark mode', hint: 'T', run: toggleTheme },
+    { label: 'Sign out', hint: escapeHtml(store.user.email), run: () => store.logout() },
+  ]
+})
+
+injectIcons()
+applyTheme()
+render()
+market.start(3000)
