@@ -25,7 +25,7 @@ describe('applyTrade', () => {
   it('rejects invalid trades without mutating input', () => {
     const u = user()
     expect(() => applyTrade(u, { symbol: 'AAA', side: 'buy', qty: 1000, price: 100 })).toThrow('Insufficient funds')
-    expect(() => applyTrade(u, { symbol: 'AAA', side: 'sell', qty: 1, price: 100 })).toThrow('Not enough shares')
+    expect(() => applyTrade(u, { symbol: 'AAA', side: 'sell', qty: 1, price: 100 })).toThrow('Not enough units')
     expect(() => applyTrade(u, { symbol: 'AAA', side: 'buy', qty: 0, price: 100 })).toThrow('positive')
     expect(u).toEqual(user())
   })
@@ -48,5 +48,25 @@ describe('summaries', () => {
     const two = enrichHoldings([{ symbol: 'AAA', qty: 1, avgPrice: 1 }, { symbol: 'BBB', qty: 2, avgPrice: 1 }], fakeMarket)
     expect(diversificationScore(two)).toBeGreaterThan(diversificationScore(one))
     expect(diversificationScore([])).toBe(0)
+  })
+})
+
+describe('fractional (crypto) trades', () => {
+  it('rounds down to the step and sells out cleanly', () => {
+    let u = applyTrade(user(), { symbol: 'BTC', side: 'buy', qty: 0.0012345678, price: 5000, step: 0.000001 })
+    expect(u.holdings[0].qty).toBe(0.001234)
+    u = applyTrade(u, { symbol: 'BTC', side: 'buy', qty: 0.1, price: 5000, step: 0.000001 })
+    u = applyTrade(u, { symbol: 'BTC', side: 'sell', qty: 0.101234, price: 6000, step: 0.000001 })
+    expect(u.holdings).toEqual([])
+    expect(u.balance).toBeCloseTo(10000 + 0.101234 * 1000, 6)
+  })
+
+  it('rejects amounts below the step', () => {
+    expect(() => applyTrade(user(), { symbol: 'BTC', side: 'buy', qty: 0.0000001, price: 5000, step: 0.000001 })).toThrow('at least')
+  })
+
+  it('ignores holdings for symbols that are no longer listed', () => {
+    const rows = enrichHoldings([{ symbol: 'GONE', qty: 1, avgPrice: 1 }, { symbol: 'AAA', qty: 1, avgPrice: 1 }], fakeMarket)
+    expect(rows.map((r) => r.symbol)).toEqual(['AAA'])
   })
 })

@@ -1,7 +1,7 @@
 import { store } from '../lib/store.js'
 import { market } from '../lib/market.js'
 import { summarize, valueSeries } from '../lib/portfolio.js'
-import { money, moneyCompact, percent, signedMoney, number, tone, escapeHtml } from '../lib/format.js'
+import { money, moneyCompact, percent, signedMoney, quantity, tone, escapeHtml } from '../lib/format.js'
 import { makeChart, palette, gradient } from '../ui/charts.js'
 import { sparkline } from '../ui/sparkline.js'
 import { openTrade, openDetail } from '../ui/trade.js'
@@ -18,7 +18,7 @@ export default {
     root.innerHTML = `
       <div class="page-head">
         <div><h1>Hello, ${escapeHtml(store.user.name.split(' ')[0])} 👋</h1><p class="muted">Here's how your portfolio is doing today.</p></div>
-        <a class="btn primary" href="#/market">${icon('market')} Explore market</a>
+        <div class="actions"><a class="btn ghost" href="#/crypto">${icon('coins')} Crypto</a><a class="btn ghost" href="#/commodities">${icon('gem')} Commodities</a><a class="btn primary" href="#/stocks">${icon('market')} Stocks</a></div>
       </div>
       <div class="kpis"></div>
       <div class="grid-2-1">
@@ -40,14 +40,14 @@ export default {
         <article class="card">
           <div class="card-head"><h2>Holdings</h2><span class="muted" data-count></span></div>
           <div class="table-wrap"><table class="table">
-            <thead><tr><th>Stock</th><th class="num">Qty</th><th class="num">Avg</th><th class="num">LTP</th><th class="num">Value</th><th class="num">P&amp;L</th><th></th></tr></thead>
+            <thead><tr><th>Asset</th><th class="num">Qty</th><th class="num">Avg</th><th class="num">LTP</th><th class="num">Value</th><th class="num">P&amp;L</th><th></th></tr></thead>
             <tbody data-holdings></tbody>
           </table></div>
         </article>
         <article class="card">
-          <div class="card-head"><h2>Watchlist</h2><a class="muted" href="#/market">Manage</a></div>
+          <div class="card-head"><h2>Watchlist</h2><a class="muted" href="#/stocks">Manage</a></div>
           <ul class="watch" data-watch></ul>
-          <div class="card-head"><h2>Top movers</h2></div>
+          <div class="card-head"><h2>Top stock movers</h2></div>
           <ul class="watch" data-movers></ul>
         </article>
       </div>`
@@ -112,28 +112,28 @@ export default {
           const flash = last == null || last === r.price ? '' : r.price > last ? 'flash-up' : 'flash-down'
           prev.set(r.symbol, r.price)
           return `<tr>
-            <td><button class="link" data-detail="${r.symbol}"><b>${r.symbol}</b></button><div class="muted tiny">${escapeHtml(r.name)}</div></td>
-            <td class="num">${number(r.qty)}</td>
+            <td><button class="link" data-detail="${escapeHtml(r.symbol)}"><b>${escapeHtml(r.symbol)}</b></button><div class="muted tiny">${escapeHtml(r.name)}</div></td>
+            <td class="num">${quantity(r.qty)}</td>
             <td class="num">${money(r.avgPrice)}</td>
             <td class="num ${flash}">${money(r.price)}</td>
             <td class="num">${money(r.value)}</td>
             <td class="num ${tone(r.pnl)}">${signedMoney(r.pnl)}<div class="tiny">${percent(r.pnlPct)}</div></td>
-            <td class="row-actions"><button class="btn xs primary" data-buy="${r.symbol}">Buy</button><button class="btn xs danger" data-sell="${r.symbol}">Sell</button></td>
+            <td class="row-actions"><button class="btn xs primary" data-buy="${escapeHtml(r.symbol)}">Buy</button><button class="btn xs danger" data-sell="${escapeHtml(r.symbol)}">Sell</button></td>
           </tr>`
         }).join('')
-        : `<tr><td colspan="7" class="empty">No holdings yet — <a href="#/market">buy your first stock</a>.</td></tr>`
+        : `<tr><td colspan="7" class="empty">No holdings yet — <a href="#/stocks">buy your first stock</a>.</td></tr>`
 
       const item = (sym) => {
         const q = market.get(sym)
         const ch = market.change(sym)
-        return `<li><button class="watch-row" data-detail="${sym}">
-          <span><b>${sym}</b><small class="muted">${escapeHtml(q.sector)}</small></span>
+        return `<li><button class="watch-row" data-detail="${escapeHtml(sym)}">
+          <span><b>${escapeHtml(sym)}</b><small class="muted">${escapeHtml(q.kind === 'stock' ? q.sector : q.kind === 'crypto' ? 'Crypto' : 'Commodity')}</small></span>
           ${sparkline(q.history.slice(-30), { width: 80, height: 28 })}
           <span class="num"><span>${money(q.price)}</span><small class="${tone(ch.abs)}">${percent(ch.pct)}</small></span>
         </button></li>`
       }
-      $('[data-watch]', root).innerHTML = u.watchlist.length ? u.watchlist.map(item).join('') : '<li class="empty">Star stocks in the market to watch them.</li>'
-      const movers = market.all().map((q) => [q.symbol, Math.abs(market.change(q.symbol).pct)]).sort((a, b) => b[1] - a[1]).slice(0, 4)
+      $('[data-watch]', root).innerHTML = u.watchlist.length ? u.watchlist.filter((s) => market.has(s)).map(item).join('') : '<li class="empty">Star stocks in the market to watch them.</li>'
+      const movers = market.byKind('stock').map((q) => [q.symbol, Math.abs(market.change(q.symbol).pct)]).sort((a, b) => b[1] - a[1]).slice(0, 4)
       $('[data-movers]', root).innerHTML = movers.map(([sym]) => item(sym)).join('')
     }
 

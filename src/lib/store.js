@@ -1,4 +1,4 @@
-import { STARTING_BALANCE } from '../data/stocks.js'
+import { STARTING_BALANCE } from '../data/assets.js'
 
 const USERS_KEY = 'sv_users'
 const SESSION_KEY = 'sv_current_user'

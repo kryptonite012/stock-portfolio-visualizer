@@ -1,7 +1,7 @@
 import { store } from '../lib/store.js'
 import { market } from '../lib/market.js'
 import { summarize } from '../lib/portfolio.js'
-import { money, number, signedMoney, when, tone } from '../lib/format.js'
+import { money, quantity, signedMoney, when, tone, escapeHtml } from '../lib/format.js'
 import { toCsv, download } from '../lib/csv.js'
 import { toast } from '../ui/toast.js'
 import { $, icon } from '../ui/dom.js'
@@ -51,15 +51,15 @@ export default {
         ? txs.map((t) => `<tr>
             <td>${when(t.ts)}</td>
             <td><span class="badge ${t.side === 'buy' ? 'up' : 'down'}">${t.side.toUpperCase()}</span></td>
-            <td><b>${t.symbol}</b></td>
-            <td class="num">${number(t.qty)}</td>
+            <td><b>${escapeHtml(t.symbol)}</b></td>
+            <td class="num">${quantity(t.qty)}</td>
             <td class="num">${money(t.price)}</td>
             <td class="num">${money(t.total)}</td>
             <td class="num ${tone(t.realized)}">${t.side === 'sell' ? signedMoney(t.realized) : '—'}</td>
           </tr>`).join('')
         : '<tr><td colspan="7" class="empty">No orders yet.</td></tr>'
       $('[data-alerts]', root).innerHTML = u.alerts.length
-        ? u.alerts.map((a) => `<li><span><b>${a.symbol}</b> ${a.direction} ${money(a.target)}<small class="muted"> · now ${money(market.get(a.symbol).price)}</small></span>
+        ? u.alerts.map((a) => `<li><span><b>${a.symbol}</b> ${a.direction} ${money(a.target)}<small class="muted"> · now ${market.has(a.symbol) ? money(market.get(a.symbol).price) : '—'}</small></span>
             <button class="icon-btn" data-del="${a.id}" aria-label="Delete alert">${icon('trash')}</button></li>`).join('')
         : '<li class="empty">No alerts. Open a stock and tap “Alert”.</li>'
     }
@@ -74,8 +74,8 @@ export default {
         const rows = summarize(u, market).rows
         download(`stockvault-holdings-${stamp}.csv`, toCsv(rows, [
           { label: 'Symbol', value: (r) => r.symbol }, { label: 'Name', value: (r) => r.name },
-          { label: 'Sector', value: (r) => r.sector }, { label: 'Qty', value: (r) => r.qty },
-          { label: 'Avg Price', value: (r) => r.avgPrice.toFixed(2) }, { label: 'LTP', value: (r) => r.price.toFixed(2) },
+          { label: 'Sector', value: (r) => r.sector }, { label: 'Type', value: (r) => r.kind }, { label: 'Qty', value: (r) => r.qty },
+          { label: 'Avg Price', value: (r) => r.avgPrice }, { label: 'LTP', value: (r) => r.price },
           { label: 'Value', value: (r) => r.value.toFixed(2) }, { label: 'P&L', value: (r) => r.pnl.toFixed(2) },
         ]))
         toast('Holdings exported', { tone: 'success' })
@@ -83,7 +83,7 @@ export default {
         download(`stockvault-orders-${stamp}.csv`, toCsv(u.transactions, [
           { label: 'Date', value: (r) => new Date(r.ts).toISOString() }, { label: 'Side', value: (r) => r.side },
           { label: 'Symbol', value: (r) => r.symbol }, { label: 'Qty', value: (r) => r.qty },
-          { label: 'Price', value: (r) => r.price.toFixed(2) }, { label: 'Total', value: (r) => r.total.toFixed(2) },
+          { label: 'Price', value: (r) => r.price }, { label: 'Total', value: (r) => r.total.toFixed(2) },
           { label: 'Realised', value: (r) => (r.realized || 0).toFixed(2) },
         ]))
         toast('Orders exported', { tone: 'success' })

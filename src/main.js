@@ -10,13 +10,17 @@ import { checkAlerts } from './ui/trade.js'
 import { $, $$, icon } from './ui/dom.js'
 import auth from './views/auth.js'
 import dashboard from './views/dashboard.js'
-import marketView from './views/market.js'
+import stocks from './views/stocks.js'
+import { liveMarketView } from './views/live-market.js'
+import { startCryptoFeed } from './lib/feeds/crypto.js'
 import analytics from './views/analytics.js'
 import history from './views/history.js'
 
 const routes = {
   '/dashboard': { view: dashboard, icon: 'dashboard', label: 'Dashboard' },
-  '/market': { view: marketView, icon: 'market', label: 'Market' },
+  '/stocks': { view: stocks, icon: 'market', label: 'Stocks' },
+  '/commodities': { view: liveMarketView('commodity'), icon: 'gem', label: 'Commodities' },
+  '/crypto': { view: liveMarketView('crypto'), icon: 'coins', label: 'Crypto' },
   '/analytics': { view: analytics, icon: 'analytics', label: 'Analytics' },
   '/activity': { view: history, icon: 'history', label: 'Activity' },
 }
@@ -53,7 +57,7 @@ function shell() {
         <a class="brand" href="#/dashboard">${icon('logo')}<span>StockVault</span></a>
         <nav class="nav" aria-label="Main">${nav}</nav>
         <div class="sidebar-foot">
-          <div class="market-status"><i class="dot"></i> Market live</div>
+          <div class="market-status" data-status></div>
         </div>
       </aside>
       <div class="main">
@@ -83,13 +87,18 @@ function updateShell() {
     <span class="${tone(s.dayPnl)}">Today ${percent(s.dayPnlPct)}</span>`
   $('.avatar').textContent = u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
   $('.avatar').title = `${u.name} · ${u.email}`
+  const crypto = market.feeds.crypto
+  $('[data-status]').innerHTML = `
+    <span><i class="dot"></i> NSE &amp; MCX · simulated</span>
+    <span><i class="dot ${crypto === 'live' ? '' : 'off'}"></i> Crypto · ${crypto === 'live' ? 'live' : crypto === 'connecting' ? 'connecting' : 'simulated'}</span>`
   $('[data-theme-toggle]').innerHTML = icon(effectiveTheme() === 'dark' ? 'sun' : 'moon')
 }
 
 // ---------- routing ----------
 function resolve() {
   if (!store.user) return { path: '/login', view: auth }
-  const path = location.hash.slice(1) || '/dashboard'
+  let path = location.hash.slice(1) || '/dashboard'
+  if (path === '/market') path = '/stocks' // old links
   if (!routes[path]) {
     location.replace('#/dashboard')
     return { path: '/dashboard', view: dashboard }
@@ -155,7 +164,7 @@ let pendingG = false
 document.addEventListener('keydown', (e) => {
   if (e.target.closest('input, textarea, select, dialog') || e.metaKey || e.ctrlKey || e.altKey || !store.user) return
   if (pendingG) {
-    const map = { d: '/dashboard', m: '/market', a: '/analytics', h: '/activity' }
+    const map = { d: '/dashboard', s: '/stocks', c: '/commodities', x: '/crypto', a: '/analytics', h: '/activity' }
     if (map[e.key]) location.hash = `#${map[e.key]}`
     pendingG = false
   } else if (e.key === 'g') {
@@ -179,3 +188,4 @@ injectIcons()
 applyTheme()
 render()
 market.start(3000)
+startCryptoFeed(market, { onStatus: updateShell })
