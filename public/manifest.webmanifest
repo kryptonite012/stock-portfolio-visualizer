@@ -1,0 +1,9 @@
+{
+  "name": "StockVault — Stock Portfolio Visualizer",
+  "short_name": "StockVault",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d12",
+  "theme_color": "#5b5bf6",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
