@@ -2,7 +2,7 @@ import { store } from '../lib/store.js'
 import { market } from '../lib/market.js'
 import { applyTrade } from '../lib/portfolio.js'
 import { money, percent, tone } from '../lib/format.js'
-import { STARTING_BALANCE } from '../data/stocks.js'
+import { STARTING_BALANCE } from '../data/assets.js'
 import { $, icon } from '../ui/dom.js'
 
 // Demo account starts with a handful of positions bought at historical prices.
@@ -10,12 +10,17 @@ function seedDemo(user) {
   const buys = [
     ['TCS', 15, 140], ['HDFCBANK', 40, 120], ['RELIANCE', 20, 100], ['INFY', 30, 90],
     ['ITC', 120, 75], ['SUNPHARMA', 25, 60], ['TATAMOTORS', 45, 45], ['BHARTIARTL', 20, 30],
+    ['GOLDM', 2, 80], ['SILVERM', 1, 50], ['BTC', 0.003, 70], ['ETH', 0.05, 40],
   ]
   const len = market.dates.length
   for (const [symbol, qty, daysAgo] of buys) {
     const price = market.get(symbol).history[len - 1 - daysAgo]
-    user = applyTrade(user, { symbol, side: 'buy', qty, price })
-    user.transactions[0].ts = Date.now() - daysAgo * 86400000
+    try {
+      user = applyTrade(user, { symbol, side: 'buy', qty, price, step: market.get(symbol).step })
+      user.transactions[0].ts = Date.now() - daysAgo * 86400000
+    } catch {
+      /* live crypto prices can make a position unaffordable; skip it */
+    }
   }
   return user
 }
@@ -24,7 +29,8 @@ export default {
   title: 'Sign in',
   mount(root) {
     let mode = 'login'
-    const tickerHtml = () => market.all().slice(0, 12).map((s) => {
+    const TICKER = ['RELIANCE', 'TCS', 'HDFCBANK', 'BTC', 'GOLD', 'INFY', 'ICICIBANK', 'ETH', 'SILVER', 'SBIN', 'CRUDEOIL', 'SOL', 'ITC', 'BHARTIARTL']
+    const tickerHtml = () => TICKER.map((sym) => market.get(sym)).map((s) => {
       const ch = market.change(s.symbol)
       return `<span><b>${s.symbol}</b> ${money(s.price)} <i class="${tone(ch.abs)}">${percent(ch.pct)}</i></span>`
     }).join('')
@@ -34,9 +40,10 @@ export default {
         <section class="auth-hero">
           <div class="brand lg">${icon('logo')} StockVault</div>
           <h1>Practice investing<br>without the risk.</h1>
-          <p>Start with ${money(STARTING_BALANCE)} in virtual cash, trade a live-simulated Indian equity market, and see your portfolio through rich analytics.</p>
+          <p>Start with ${money(STARTING_BALANCE)} in virtual cash. Trade ${market.byKind('stock').length.toLocaleString('en-IN')} NSE stocks, MCX commodities and live-priced crypto, and see your portfolio through rich analytics.</p>
           <ul class="bullets">
-            <li>${icon('pulse')} Live price simulation with technical indicators</li>
+            <li>${icon('pulse')} Live charts with SMA and RSI indicators</li>
+            <li>${icon('coins')} Real-time crypto prices from Binance</li>
             <li>${icon('analytics')} Risk metrics: volatility, Sharpe, drawdown</li>
             <li>${icon('bell')} Price alerts &amp; watchlists</li>
             <li>${icon('command')} Command palette — press <kbd>Ctrl</kbd> <kbd>K</kbd></li>

@@ -3,6 +3,8 @@ import { money, percent, tone, escapeHtml } from '../lib/format.js'
 import { openDetail } from './trade.js'
 import { icon } from './dom.js'
 
+const POPULAR = ['BTC', 'GOLD', 'RELIANCE', 'TCS', 'HDFCBANK']
+
 // ⌘K / Ctrl+K command palette: jump to pages, open stocks, run actions.
 export function setupPalette(commands) {
   const dlg = document.createElement('dialog')
@@ -20,13 +22,21 @@ export function setupPalette(commands) {
   const build = () => {
     const q = input.value.trim().toLowerCase()
     const cmds = commands().filter((c) => c.label.toLowerCase().includes(q))
-    const stocks = market.all()
-      .filter((s) => !q || s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q))
-      .slice(0, q ? 8 : 5)
+    // Rank exact symbol, then symbol prefix, then name/symbol substring.
+    const score = (s) => {
+      const sym = s.symbol.toLowerCase()
+      if (sym === q) return 0
+      if (sym.startsWith(q)) return 1
+      if (s.name.toLowerCase().startsWith(q)) return 2
+      return sym.includes(q) || s.name.toLowerCase().includes(q) ? 3 : -1
+    }
+    const stocks = (q
+      ? market.all().map((s) => [s, score(s)]).filter(([, r]) => r >= 0).sort((a, b) => a[1] - b[1]).slice(0, 8).map(([s]) => s)
+      : POPULAR.map((sym) => market.get(sym)))
       .map((s) => {
         const ch = market.change(s.symbol)
         return {
-          label: `${s.symbol} — ${s.name}`,
+          label: `${s.symbol} — ${s.name}${s.kind === 'stock' ? '' : s.kind === 'crypto' ? ' · Crypto' : ' · Commodity'}`,
           hint: `<span class="${tone(ch.abs)}">${money(s.price)} ${percent(ch.pct)}</span>`,
           run: () => openDetail(s.symbol),
         }
@@ -49,6 +59,8 @@ export function setupPalette(commands) {
     if (e.key === 'ArrowDown') { active = (active + 1) % items.length; build(); e.preventDefault() }
     if (e.key === 'ArrowUp') { active = (active - 1 + items.length) % items.length; build(); e.preventDefault() }
     if (e.key === 'Enter') { run(active); e.preventDefault() }
+    // Search inputs clear themselves on Escape; close the palette instead.
+    if (e.key === 'Escape') { dlg.close(); e.preventDefault() }
   })
   list.addEventListener('click', (e) => {
     const li = e.target.closest('[data-i]')

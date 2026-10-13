@@ -1,7 +1,10 @@
 // Pure portfolio calculations. `holdings` are { symbol, qty, avgPrice }.
 
+const EPS = 1e-9
+
 export function enrichHoldings(holdings, market) {
-  const rows = holdings.map((h) => {
+  // Skip positions whose instrument is no longer listed rather than crashing.
+  const rows = holdings.filter((h) => market.get(h.symbol)).map((h) => {
     const q = market.get(h.symbol)
     const invested = h.qty * h.avgPrice
     const value = h.qty * q.price
@@ -11,6 +14,8 @@ export function enrichHoldings(holdings, market) {
       ...h,
       name: q.name,
       sector: q.sector,
+      kind: q.kind,
+      unit: q.unit,
       price: q.price,
       invested,
       value,
@@ -70,16 +75,25 @@ export function valueSeries(holdings, market) {
   const len = market.dates.length
   const out = new Array(len).fill(0)
   for (const h of holdings) {
+    if (!market.get(h.symbol)) continue
     const hist = market.get(h.symbol).history
     for (let i = 0; i < len; i++) out[i] += h.qty * hist[i]
   }
   return out
 }
 
+// Round a quantity down to the instrument's step (1 for shares, 1e-6 for crypto).
+export function roundQty(qty, step = 1) {
+  const decimals = Math.max(0, Math.round(-Math.log10(step)))
+  return Number((Math.floor(qty / step + EPS) * step).toFixed(decimals))
+}
+
 // Apply a trade to a user object, returning a new user. Throws on invalid trades.
-export function applyTrade(user, { symbol, side, qty, price }) {
-  qty = Math.floor(qty)
-  if (!(qty > 0)) throw new Error('Quantity must be a positive whole number')
+export function applyTrade(user, { symbol, side, qty, price, step = 1 }) {
+  qty = roundQty(Number(qty), step)
+  if (!(qty > 0)) {
+    throw new Error(step >= 1 ? 'Quantity must be a positive whole number' : `Quantity must be at least ${step}`)
+  }
   const cost = qty * price
   const holdings = user.holdings.map((h) => ({ ...h }))
   const idx = holdings.findIndex((h) => h.symbol === symbol)
@@ -97,12 +111,12 @@ export function applyTrade(user, { symbol, side, qty, price }) {
       holdings.push({ symbol, qty, avgPrice: price })
     }
   } else if (side === 'sell') {
-    if (idx < 0 || holdings[idx].qty < qty) throw new Error('Not enough shares to sell')
+    if (idx < 0 || holdings[idx].qty < qty - EPS) throw new Error('Not enough units to sell')
     const h = holdings[idx]
     realized = (price - h.avgPrice) * qty
     balance += cost
-    h.qty -= qty
-    if (h.qty === 0) holdings.splice(idx, 1)
+    h.qty = roundQty(h.qty - qty, step)
+    if (h.qty < EPS) holdings.splice(idx, 1)
   } else {
     throw new Error(`Unknown side: ${side}`)
   }

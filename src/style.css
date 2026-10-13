@@ -176,7 +176,11 @@ input:focus, select:focus { outline: none; border-color: var(--accent); box-shad
 .nav a:hover { background: var(--surface-2); color: var(--text); }
 .nav a[aria-current='page'] { background: var(--accent-soft); color: var(--accent); }
 .sidebar-foot { margin-top: auto; padding: 0 8px; }
-.market-status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-2); }
+.market-status { display: grid; gap: 6px; font-size: 0.78rem; color: var(--text-2); }
+.market-status span { display: flex; align-items: center; gap: 8px; }
+.dot.off { background: var(--text-2); animation: none; }
+.live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--up); vertical-align: 1px; animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--up); box-shadow: 0 0 0 0 var(--up); animation: pulse 2s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 
@@ -231,7 +235,8 @@ input:focus, select:focus { outline: none; border-color: var(--accent); box-shad
 .table td { padding: 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:hover { background: var(--surface-2); }
-.row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.row-actions { text-align: right; }
+.row-actions .btn + .btn { margin-left: 6px; }
 .flash-up { animation: flashUp 0.9s; }
 .flash-down { animation: flashDown 0.9s; }
 @keyframes flashUp { from { background: color-mix(in srgb, var(--up) 25%, transparent); } }
@@ -392,4 +397,24 @@ dialog::backdrop { background: #05060a99; backdrop-filter: blur(3px); }
   .auth-hero { padding: 32px 16px 64px; border-right: 0; border-bottom: 1px solid var(--border); }
   .auth-card { margin: 24px 0; }
   .kv.grid4 { grid-template-columns: auto 1fr; }
+}
+
+/* ---------- live markets ---------- */
+.chart-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.featured { display: grid; gap: 14px; }
+.featured-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.featured-name { font-size: 1rem; }
+.featured-price { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.stock.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
+.badge .live-dot { width: 6px; height: 6px; margin-right: 5px; }
+
+.stocks-table td.wrap { white-space: normal; min-width: 140px; }
+.stocks-table .link span { max-width: 260px; }
+.pager { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); margin-top: 6px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; transform: none; }
+
+@media (max-width: 760px) {
+  .nav a { font-size: 0.62rem; padding: 6px 2px; }
+  .stocks-table th:nth-child(3), .stocks-table td:nth-child(3),
+  .stocks-table th:nth-child(6), .stocks-table td:nth-child(6) { display: none; }
 }
