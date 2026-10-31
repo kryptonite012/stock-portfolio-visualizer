@@ -116,7 +116,7 @@ Holdings use the weighted average buy price. Sells record realised P&L.
 ## 🔮 Roadmap
 
 - Real NSE and MCX prices through a small server-side proxy (browsers can't call NSE or Yahoo Finance directly)
-- Cloud accounts. `AUTH CONTROLLER (REGISTER + LOGIN)` and `iindx.js` are early Express/MongoDB sketches for this.
+- Cloud accounts. `docs/server-snippets/` holds early Express/MongoDB sketches for this.
 - More indicators (MACD, Bollinger Bands) and comparison with a benchmark index
 - PDF reports
 - Signed release builds and Google Play / app store listings
